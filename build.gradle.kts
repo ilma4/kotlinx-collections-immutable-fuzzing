@@ -23,6 +23,7 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     testLogging.showStandardStreams = true
+    maxHeapSize = "${1024 * 4}m"
 }
 
 kotlin {
