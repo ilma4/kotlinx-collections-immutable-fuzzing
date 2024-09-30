@@ -7,6 +7,7 @@ package fuzz.utils
 
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.PersistentSet
 
 sealed interface EmptyOperation
 sealed interface ListOperation {
@@ -48,5 +49,18 @@ sealed interface MapOperation {
 
     fun validate(preMap: Map<Int, Int>, postMap: Map<Int, Int>)
 
-    fun reverse(preMap: PersistentMap<Int, Int>, postMap: PersistentMap<Int, Int>): PersistentMap<Int, Int>?
+    fun reverse(
+        preMap: PersistentMap<Int, Int>,
+        postMap: PersistentMap<Int, Int>
+    ): PersistentMap<Int, Int>?
+}
+
+sealed interface SetOperation {
+    fun PersistentSet<Int>.applyInternal(): PersistentSet<Int>
+    fun MutableSet<Int>.applyInternal()
+
+    fun apply(set: PersistentSet<Int>): PersistentSet<Int> = set.applyInternal()
+    fun apply(set: MutableSet<Int>) = set.applyInternal()
+
+    fun validateInvariants(preSet: PersistentSet<Int>, postSet: PersistentSet<Int>)
 }

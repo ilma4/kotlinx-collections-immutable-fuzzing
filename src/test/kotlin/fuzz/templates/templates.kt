@@ -4,6 +4,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import fuzz.utils.*
 import fuzz.utils.HistoryList.Companion.historyList
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.toPersistentList
 import org.junit.jupiter.api.Assertions.assertTrue
 
@@ -25,6 +26,24 @@ inline fun persistentMapRandomOps(
     }
 
     memorisingMap.validate()
+}
+
+
+inline fun persistentSetRandomOps(
+    data: FuzzedDataProvider,
+    toPersistent: Set<Int>.() -> PersistentSet<Int>,
+) {
+    val firstSet = data.consumeInts(initSize).toSet()
+
+    val memorisingSet = MemorisingSet(mutableListOf(firstSet.toPersistent()))
+
+    val opsNum = data.consumeInt(10, 1000)
+    repeat(opsNum) {
+        val op = data.consumeSetOperation(memorisingSet.last)
+        memorisingSet.applyOperation(op)
+    }
+
+    memorisingSet.validate()
 }
 
 fun persistentListBubbleSort(ints: List<Int>) {

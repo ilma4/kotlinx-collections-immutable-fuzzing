@@ -16,7 +16,11 @@ dependencies {
 
     testImplementation("com.code-intelligence:jazzer-api:0.0.0-dev")
     testImplementation("com.code-intelligence:jazzer-junit:0.0.0-dev")
+
     testImplementation(kotlin("reflect"))
+    implementation("org.reflections:reflections:0.10.2")
+
+
 
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.8")
 }

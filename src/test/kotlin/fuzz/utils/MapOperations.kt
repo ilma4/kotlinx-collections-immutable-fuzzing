@@ -7,6 +7,7 @@ package fuzz.utils
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.putAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import kotlin.reflect.full.isSubclassOf
@@ -31,7 +32,7 @@ data class Put(val key: Int, val value: Int) : MapOperation, EmptyOperation {
     }
 }
 
-data class Remove(val key: Int) : MapOperation {
+data class Remove(val key: Int) : MapOperation, SetOperation {
     override fun PersistentMap<Int, Int>.applyInternal(): PersistentMap<Int, Int> = remove(key)
 
     override fun MutableMap<Int, Int>.applyInternal() {
@@ -50,6 +51,24 @@ data class Remove(val key: Int) : MapOperation {
         if (preMap.containsKey(key)) return postMap.put(key, preMap[key]!!)
         return postMap
     }
+
+    override fun PersistentSet<Int>.applyInternal(): PersistentSet<Int> {
+        return remove(key)
+    }
+
+    override fun MutableSet<Int>.applyInternal() {
+        this.remove(key)
+    }
+
+    override fun validateInvariants(preSet: PersistentSet<Int>, postSet: PersistentSet<Int>) {
+        require(key !in postSet)
+        if (key in preSet) {
+            require(preSet.size == postSet.size + 1)
+        } else {
+            require(preSet.size == postSet.size)
+        }
+    }
+
 }
 
 data class PutAll(val keyValues: List<Pair<Int, Int>>) : MapOperation, EmptyOperation {

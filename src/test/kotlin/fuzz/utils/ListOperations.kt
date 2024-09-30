@@ -8,14 +8,15 @@ package fuzz.utils
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import kotlin.reflect.full.isSubclassOf
 
-//@JvmInline
-//value class Index(val value: Int)
 
-data class Add(val element: Int) : ListOperation, EmptyOperation {
+private fun Boolean.toInt(): Int = if (this) 1 else 0
+
+data class Add(val element: Int) : ListOperation, EmptyOperation, SetOperation {
     override fun MutableList<Int>.applyInternal() {
         this.add(element)
     }
@@ -28,6 +29,17 @@ data class Add(val element: Int) : ListOperation, EmptyOperation {
     }
 
     override val reverseOperation get() = RemoveLast
+    override fun PersistentSet<Int>.applyInternal(): PersistentSet<Int> = this.add(element)
+
+    override fun MutableSet<Int>.applyInternal() {
+        this.add(element)
+    }
+
+    override fun validateInvariants(preSet: PersistentSet<Int>, postSet: PersistentSet<Int>) {
+        assertTrue(postSet.contains(element))
+        assertEquals(postSet.size - preSet.size, (element !in preSet).toInt())
+    }
+
 }
 
 data class AddAt(val index: Int, val element: Int) : ListOperation, EmptyOperation {
@@ -47,7 +59,7 @@ data class AddAt(val index: Int, val element: Int) : ListOperation, EmptyOperati
         get() = RemoveAt(index)
 }
 
-data class AddAll(val elements: Collection<Int>) : ListOperation, EmptyOperation {
+data class AddAll(val elements: Collection<Int>) : ListOperation, EmptyOperation, SetOperation {
     override fun MutableList<Int>.applyInternal() {
         addAll(elements)
     }
@@ -56,11 +68,24 @@ data class AddAll(val elements: Collection<Int>) : ListOperation, EmptyOperation
     override fun PersistentList<Int>.applyInternal(): PersistentList<Int> =
         this.addAll(elements.toList())
 
-
     override fun validateInvariants(preList: List<Int>, postList: List<Int>) {
         require(postList.size == preList.size + elements.size)
         require(postList.subList(preList.size, postList.size) == elements.toList())
     }
+
+    override fun PersistentSet<Int>.applyInternal(): PersistentSet<Int> {
+        return addAll(elements)
+    }
+
+    override fun MutableSet<Int>.applyInternal() {
+        this.addAll(elements)
+    }
+
+    override fun validateInvariants(preSet: PersistentSet<Int>, postSet: PersistentSet<Int>) {
+        require(postSet.size == preSet.size + elements.toSet().count { it !in preSet })
+        require(postSet.containsAll(elements))
+    }
+
 }
 
 data class AddAllAt(val index: Int, val elements: Collection<Int>) : ListOperation, EmptyOperation {
@@ -146,7 +171,6 @@ fun FuzzedDataProvider.consumeIntList(): List<Int> {
     val size = consumeInt(0, 10)
     return List(size) { consumeInt() }
 }
-
 
 fun FuzzedDataProvider.consumeRemoveIndex(list: List<*>): Int = consumeInt(0, list.lastIndex)
 

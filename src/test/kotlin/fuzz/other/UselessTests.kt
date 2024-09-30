@@ -5,7 +5,7 @@
 
 @file:Suppress("USELESS_IS_CHECK", "PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 
-package fuzz
+package fuzz.other
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import com.code_intelligence.jazzer.junit.FuzzTest
